@@ -6,17 +6,15 @@ const jwt = require('jsonwebtoken');
 const movieSchema = mongoose.Schema({
   imdbID: {
     type: String,
-    required: [true, 'Title is quired'],
+    required: true,
+    unique: true,
     trim: true
-  },
-  favourite: {
-    type: Boolean,
-    required: false,
-    default: false
   },
   userRating: {
     type: Number,
     required: false,
+    min: 1,
+    max: 10,
     validate: {
         validator: Number.isInteger
     }
@@ -53,7 +51,7 @@ const userSchema = mongoose.Schema({
       }
     }
   ],
-  movies: [movieSchema]
+  favMovies: [movieSchema]
 });
 
 userSchema.pre('save', async function(next) {
