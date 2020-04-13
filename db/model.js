@@ -18,6 +18,11 @@ const movieSchema = mongoose.Schema({
     validate: {
         validator: Number.isInteger
     }
+  },
+  isFavourite: {
+    type: Boolean,
+    required: false,
+    default: false
   }
 });
 
@@ -51,7 +56,7 @@ const userSchema = mongoose.Schema({
       }
     }
   ],
-  favMovies: [movieSchema]
+  movies: [movieSchema]
 });
 
 userSchema.pre('save', async function(next) {

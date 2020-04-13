@@ -12,17 +12,35 @@ router.get('/find/:title', async (req, res) => {
     res.send({Title, Genre, Year, imdbID})
 })
 
-router.post('/favourite/:imdbID', auth, async (req, res) => {
+router.post('/markfavourite/:imdbID', auth, async (req, res) => {
+    try {
+        const user = req.user;
+        const movie = user.movies.find(ele => ele.imdbID === req.params.imdbID);
+        if (movie === undefined || movie.length == 0) {
+            const newMovie = user.movies.create({imdbID: req.params.imdbID, isFavourite: true});
+            user.movies.push(newMovie);
+        } else {
+            movie.isFavourite = true;
+        }
+        await user.save();
+            res.send(user.movies);
+    } catch (error) {
+        console.log(error)
+        res.status(400).send(error);
+    }
+})
+
+router.post('/unmarkfavourite/:imdbID', auth, async (req, res) => {
     const user = req.user;
-    const movie = user.favMovies.create({imdbID: req.params.imdbID});
-    user.favMovies.push(movie);
+    const movie = user.movies.find(ele => ele.imdbID === req.params.imdbID);
+    movie.isFavourite = false;
     await user.save();
-    res.send(user.favMovies);
+    res.send(movie);
 })
 
 router.post('/rate/:imdbID/:rating', auth, async (req, res) => {
     const user = req.user;
-    const movie = user.favMovies.find(ele => ele.imdbID === req.params.imdbID);
+    const movie = user.movies.find(ele => ele.imdbID === req.params.imdbID);
     movie.userRating = req.params.rating;
     await user.save();
     res.send(movie);
