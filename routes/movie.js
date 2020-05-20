@@ -9,6 +9,10 @@ const router = express.Router();
 router.get('/find/:title', softAuth, async (req, res) => {
     const title = req.params.title;
     const { data, status} = await axios.get(`http://www.omdbapi.com/?apikey=5aa9361f&t=${title}`)
+    if(data.Response === 'False') {
+        res.status(status).send(data)
+        return;
+    }
     const {Title, Genre, Year, imdbID} = data;
     const usersWithMovie = await User.find({'movies.imdbID': imdbID, 'movies.userRating': {$ne: null}});
     const averageRating = usersWithMovie.reduce((total, next) => total + next.movies.find(ele => ele.imdbID === imdbID).userRating, 0) / usersWithMovie.length;
@@ -17,8 +21,13 @@ router.get('/find/:title', softAuth, async (req, res) => {
     if(!user) {
         res.send({Title, Genre, Year, imdbID, averageRating})
     } else {
-        const {userRating, isFavourite} = user.movies.find(ele => ele.imdbID === imdbID);
-        res.send({Title, Genre, Year, imdbID, averageRating, userRating, isFavourite})
+        const userMovie = user.movies.find(ele => ele.imdbID === imdbID);
+        if(!userMovie) {
+            res.send({Title, Genre, Year, imdbID, averageRating})
+        } else {
+            const {userRating, isFavourite} = userMovie;
+            res.send({Title, Genre, Year, imdbID, averageRating, userRating, isFavourite})
+        }
     }
 })
 
